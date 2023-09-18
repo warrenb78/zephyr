@@ -31,9 +31,16 @@ extern "C" {
  * @brief LoRa signal bandwidth
  */
 enum lora_signal_bandwidth {
-	BW_125_KHZ = 0,
+	BW_7_KHZ = 0,
+	BW_15_KHZ,
+	BW_31_KHZ,
+	BW_62_KHZ,
+	BW_125_KHZ,
 	BW_250_KHZ,
 	BW_500_KHZ,
+	BW_10_KHZ = 8,
+	BW_20_KHZ,
+	BW_41_KHZ,
 };
 
 /**

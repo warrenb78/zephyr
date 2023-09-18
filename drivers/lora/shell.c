@@ -26,9 +26,16 @@ static struct lora_modem_config modem_config = {
 };
 
 static const int bw_table[] = {
+	[BW_7_KHZ] = 7,
+	[BW_15_KHZ] = 15,
+	[BW_31_KHZ] = 31,
+	[BW_62_KHZ] = 62,
 	[BW_125_KHZ] = 125,
 	[BW_250_KHZ] = 250,
 	[BW_500_KHZ] = 500,
+	[BW_10_KHZ] = 10,
+	[BW_20_KHZ] = 20,
+	[BW_41_KHZ] = 41,
 };
 
 static int parse_long(long *out, const struct shell *sh, const char *arg)
@@ -165,6 +172,18 @@ static int lora_conf_set(const struct shell *sh, const char *param,
 			return -EINVAL;
 		}
 		switch (lval) {
+		case 7:
+			modem_config.bandwidth = BW_7_KHZ;
+			break;
+		case 15:
+			modem_config.bandwidth = BW_15_KHZ;
+			break;
+		case 31:
+			modem_config.bandwidth = BW_31_KHZ;
+			break;
+		case 62:
+			modem_config.bandwidth = BW_62_KHZ;
+			break;
 		case 125:
 			modem_config.bandwidth = BW_125_KHZ;
 			break;
@@ -173,6 +192,15 @@ static int lora_conf_set(const struct shell *sh, const char *param,
 			break;
 		case 500:
 			modem_config.bandwidth = BW_500_KHZ;
+			break;
+		case 10:
+			modem_config.bandwidth = BW_10_KHZ;
+			break;
+		case 20:
+			modem_config.bandwidth = BW_20_KHZ;
+			break;
+		case 41:
+			modem_config.bandwidth = BW_41_KHZ;
 			break;
 		default:
 			shell_error(sh, "Invalid bandwidth: %ld", lval);
