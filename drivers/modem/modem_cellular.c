@@ -861,7 +861,7 @@ static int modem_cellular_on_power_off_pulse_state_enter(struct modem_cellular_d
 		(const struct modem_cellular_config *)data->dev->config;
 
 	gpio_pin_set_dt(&config->power_gpio, 1);
-	modem_cellular_start_timer(data, K_MSEC(config->power_pulse_duration_ms));
+	modem_cellular_start_timer(data, K_MSEC(config->shutdown_time_ms));
 	return 0;
 }
 
@@ -1313,6 +1313,7 @@ MODEM_CHAT_SCRIPT_CMDS_DEFINE(zephyr_gsm_ppp_init_chat_script_cmds,
 			      MODEM_CHAT_SCRIPT_CMD_RESP_NONE("AT", 100),
 			      MODEM_CHAT_SCRIPT_CMD_RESP_NONE("AT", 100),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("ATE0", ok_match),
+				  MODEM_CHAT_SCRIPT_CMD_RESP("AT+IFC=2,2", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CFUN=4", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CMEE=1", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CREG=1", ok_match),
