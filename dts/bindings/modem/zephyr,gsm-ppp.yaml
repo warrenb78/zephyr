@@ -11,3 +11,5 @@ properties:
   mdm-power-gpios:
     type: phandle-array
     required: true
+  rtc:
+    type: 
