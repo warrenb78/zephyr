@@ -304,7 +304,7 @@ static void modem_cellular_chat_on_cclk(struct modem_chat *chat, char **argv, ui
 	
 	if (7 == sscanf("CCLK: %02u/%02u/%02u,%02u:%02u:%02u%d", time_rtc.tm_year, time_rtc.tm_mon, time_rtc.tm_mday, time_rtc.tm_hour, time_rtc.tm_min, time_rtc.tm_sec, timezone)) {
 		time_rtc.tm_year += 2000;
-		time_rtc.__tm_gmtoff = timezone * 15 * 60;
+		// time_rtc.__tm_gmtoff = timezone * 15 * 60;
 
     	/* Convert UNIX time to rtc_time type */
     	(void)gmtime_r(&time, (struct tm *)(&datetime_set));
@@ -1507,7 +1507,7 @@ MODEM_CHAT_SCRIPT_DEFINE(swir_hl7800_dial_chat_script, swir_hl7800_dial_chat_scr
 	static struct modem_cellular_config MODEM_CELLULAR_INST_NAME(config, inst) = {		\
 		.uart = DEVICE_DT_GET(DT_INST_BUS(inst)),					\
 		.power_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, mdm_power_gpios, {}),		\
-		.rtc = DT_NODELABEL(rtc), \
+		.rtc = DEVICE_DT_GET(DT_NODELABEL(rtc)), \
 		.reset_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, mdm_reset_gpios, {}),		\
 		.power_pulse_duration_ms = 1500,						\
 		.reset_pulse_duration_ms = 100,							\
