@@ -57,6 +57,8 @@ enum modem_cellular_event {
 	MODEM_CELLULAR_EVENT_BUS_CLOSED,
 };
 
+static bool rtc_synced = false;
+
 struct modem_cellular_data {
 	/* UART backend */
 	struct modem_pipe *uart_pipe;
@@ -287,28 +289,32 @@ static void modem_cellular_chat_on_imei(struct modem_chat *chat, char **argv, ui
 static void modem_cellular_chat_on_cclk(struct modem_chat *chat, char **argv, uint16_t argc,
 					void *user_data)
 {
-	struct tm time_rtc;
+	struct tm time_rtc = { 0 };
 	int timezone = 0;
-	struct rtc_time datetime_set;
 	struct modem_cellular_data *data = (struct modem_cellular_data *)user_data;
 	const struct modem_cellular_config *config =
 		(const struct modem_cellular_config *)data->dev->config;
+
+	if (rtc_synced) {
+		return;
+	}
 
 	if (argc != 2) {
 		return;
 	}
 
-	if (strlen(argv[1]) != 26) {
+	if (strlen(argv[1]) != 29) {
 		return;
 	}
-	
-	if (7 == sscanf("CCLK: %02u/%02u/%02u,%02u:%02u:%02u%d", time_rtc.tm_year, time_rtc.tm_mon, time_rtc.tm_mday, time_rtc.tm_hour, time_rtc.tm_min, time_rtc.tm_sec, timezone)) {
-		time_rtc.tm_year += 2000;
-		// time_rtc.__tm_gmtoff = timezone * 15 * 60;
+
+	if (7 == sscanf(argv[1], "+CCLK: \"%02u/%02u/%02u,%02u:%02u:%02u%d\"", &time_rtc.tm_year, &time_rtc.tm_mon, &time_rtc.tm_mday, &time_rtc.tm_hour, &time_rtc.tm_min, &time_rtc.tm_sec, &timezone)) {
+		time_rtc.tm_year += 100;
+		time_rtc.tm_hour -= (timezone / 4);
+		time_rtc.tm_mon -= 1;
 
     	/* Convert UNIX time to rtc_time type */
-    	(void)gmtime_r(&time, (struct tm *)(&datetime_set));
-		(void)rtc_set_time(config->rtc, &datetime_set);
+		(void)rtc_set_time(config->rtc, &time_rtc);
+		rtc_synced = true;
 	}
 }
 
@@ -1356,8 +1362,9 @@ MODEM_CHAT_SCRIPT_CMDS_DEFINE(zephyr_gsm_ppp_init_chat_script_cmds,
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CEREG?", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGREG?", ok_match), 
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGSN", imei_match),
-				  MODEM_CHAT_SCRIPT_CMD_RESP("AT+CCLK?", cclk_query),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("", ok_match),
+				  MODEM_CHAT_SCRIPT_CMD_RESP("AT+CCLK?", cclk_query),
+				  MODEM_CHAT_SCRIPT_CMD_RESP("", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGMM", cgmm_match),
 			      /* The 300ms delay after sending the AT+CMUX command is required
 			       * for some modems to ensure they get enough time to enter CMUX
