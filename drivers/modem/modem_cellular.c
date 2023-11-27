@@ -286,6 +286,18 @@ static void modem_cellular_chat_on_imei(struct modem_chat *chat, char **argv, ui
 	}
 }
 
+static void modem_cellular_chat_on_baudrate(struct modem_chat *chat, char **argv, uint16_t argc,
+					void *user_data)
+{
+	struct modem_cellular_data *data = (struct modem_cellular_data *)user_data;
+	const struct modem_cellular_config *config =
+		(const struct modem_cellular_config *)data->dev->config;
+	struct uart_config cfg = { 0 };
+
+	(void)uart_config_get(config->uart, &cfg); //TODO: If failes go to state reset.
+	cfg.baudrate = 2000000;
+	(void)uart_configure(config->uart, &cfg); //TODO: If failes go to state reset.
+}
 static void modem_cellular_chat_on_cclk(struct modem_chat *chat, char **argv, uint16_t argc,
 					void *user_data)
 {
@@ -378,6 +390,7 @@ MODEM_CHAT_MATCHES_DEFINE(allow_match,
 			  MODEM_CHAT_MATCH("ERROR", "", NULL));
 
 MODEM_CHAT_MATCH_DEFINE(imei_match, "", "", modem_cellular_chat_on_imei);
+MODEM_CHAT_MATCH_DEFINE(set_baudrate, "OK", "", modem_cellular_chat_on_baudrate);
 MODEM_CHAT_MATCH_DEFINE(cclk_query, "", "", modem_cellular_chat_on_cclk);
 MODEM_CHAT_MATCH_DEFINE(cgmm_match, "", "", modem_cellular_chat_on_cgmm);
 
@@ -1366,6 +1379,7 @@ MODEM_CHAT_SCRIPT_CMDS_DEFINE(zephyr_gsm_ppp_init_chat_script_cmds,
 				  MODEM_CHAT_SCRIPT_CMD_RESP("AT+CCLK?", cclk_query),
 				  MODEM_CHAT_SCRIPT_CMD_RESP("", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGMM", cgmm_match),
+				  MODEM_CHAT_SCRIPT_CMD_RESP("AT+IPR=2000000", set_baudrate),
 			      /* The 300ms delay after sending the AT+CMUX command is required
 			       * for some modems to ensure they get enough time to enter CMUX
 			       * mode before sending the first CMUX command. If this delay is
