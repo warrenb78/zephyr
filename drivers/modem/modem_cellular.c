@@ -15,12 +15,15 @@
 #include <zephyr/net/ppp.h>
 #include <zephyr/pm/device.h>
 #include <zephyr/sys/atomic.h>
-
 #include <zephyr/logging/log.h>
+#include <zephyr/drivers/rtc.h>
+#include <zephyr/sys/timeutil.h>
+
 LOG_MODULE_REGISTER(modem_cellular, CONFIG_MODEM_LOG_LEVEL);
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 enum modem_cellular_state {
 	MODEM_CELLULAR_STATE_IDLE = 0,
@@ -53,6 +56,8 @@ enum modem_cellular_event {
 	MODEM_CELLULAR_EVENT_BUS_OPENED,
 	MODEM_CELLULAR_EVENT_BUS_CLOSED,
 };
+
+static bool rtc_synced = false;
 
 struct modem_cellular_data {
 	/* UART backend */
@@ -105,6 +110,7 @@ struct modem_cellular_data {
 
 struct modem_cellular_config {
 	const struct device *uart;
+	const struct device *rtc;
 	const struct gpio_dt_spec power_gpio;
 	const struct gpio_dt_spec reset_gpio;
 	const uint16_t power_pulse_duration_ms;
@@ -280,6 +286,38 @@ static void modem_cellular_chat_on_imei(struct modem_chat *chat, char **argv, ui
 	}
 }
 
+static void modem_cellular_chat_on_cclk(struct modem_chat *chat, char **argv, uint16_t argc,
+					void *user_data)
+{
+	struct tm time_rtc = { 0 };
+	int timezone = 0;
+	struct modem_cellular_data *data = (struct modem_cellular_data *)user_data;
+	const struct modem_cellular_config *config =
+		(const struct modem_cellular_config *)data->dev->config;
+
+	if (rtc_synced) {
+		return;
+	}
+
+	if (argc != 2) {
+		return;
+	}
+
+	if (strlen(argv[1]) != 29) {
+		return;
+	}
+
+	if (7 == sscanf(argv[1], "+CCLK: \"%02u/%02u/%02u,%02u:%02u:%02u%d\"", &time_rtc.tm_year, &time_rtc.tm_mon, &time_rtc.tm_mday, &time_rtc.tm_hour, &time_rtc.tm_min, &time_rtc.tm_sec, &timezone)) {
+		time_rtc.tm_year += 100;
+		time_rtc.tm_hour -= (timezone / 4);
+		time_rtc.tm_mon -= 1;
+
+    	/* Convert UNIX time to rtc_time type */
+		(void)rtc_set_time(config->rtc, &time_rtc);
+		rtc_synced = true;
+	}
+}
+
 static void modem_cellular_chat_on_cgmm(struct modem_chat *chat, char **argv, uint16_t argc,
 					void *user_data)
 {
@@ -340,6 +378,7 @@ MODEM_CHAT_MATCHES_DEFINE(allow_match,
 			  MODEM_CHAT_MATCH("ERROR", "", NULL));
 
 MODEM_CHAT_MATCH_DEFINE(imei_match, "", "", modem_cellular_chat_on_imei);
+MODEM_CHAT_MATCH_DEFINE(cclk_query, "", "", modem_cellular_chat_on_cclk);
 MODEM_CHAT_MATCH_DEFINE(cgmm_match, "", "", modem_cellular_chat_on_cgmm);
 
 MODEM_CHAT_MATCHES_DEFINE(unsol_matches,
@@ -1321,9 +1360,11 @@ MODEM_CHAT_SCRIPT_CMDS_DEFINE(zephyr_gsm_ppp_init_chat_script_cmds,
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CEREG=1", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CREG?", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CEREG?", ok_match),
-			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGREG?", ok_match),
+			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGREG?", ok_match), 
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGSN", imei_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("", ok_match),
+				  MODEM_CHAT_SCRIPT_CMD_RESP("AT+CCLK?", cclk_query),
+				  MODEM_CHAT_SCRIPT_CMD_RESP("", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGMM", cgmm_match),
 			      /* The 300ms delay after sending the AT+CMUX command is required
 			       * for some modems to ensure they get enough time to enter CMUX
@@ -1473,6 +1514,7 @@ MODEM_CHAT_SCRIPT_DEFINE(swir_hl7800_dial_chat_script, swir_hl7800_dial_chat_scr
 	static struct modem_cellular_config MODEM_CELLULAR_INST_NAME(config, inst) = {		\
 		.uart = DEVICE_DT_GET(DT_INST_BUS(inst)),					\
 		.power_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, mdm_power_gpios, {}),		\
+		.rtc = DEVICE_DT_GET(DT_NODELABEL(rtc)), \
 		.reset_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, mdm_reset_gpios, {}),		\
 		.power_pulse_duration_ms = 1500,						\
 		.reset_pulse_duration_ms = 100,							\
