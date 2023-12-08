@@ -504,7 +504,7 @@ static void modem_cellular_idle_event_handler(struct modem_cellular_data *data,
 static int modem_cellular_on_idle_state_leave(struct modem_cellular_data *data)
 {
 	const struct modem_cellular_config *config =
-		(const struct modem_cellular_config *)data->dev->config;
+		(const struct mo1dem_cellular_config *)data->dev->config;
 
 	k_sem_take(&data->suspended_sem, K_NO_WAIT);
 
@@ -1518,7 +1518,7 @@ MODEM_CHAT_SCRIPT_DEFINE(swir_hl7800_dial_chat_script, swir_hl7800_dial_chat_scr
 		.reset_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, mdm_reset_gpios, {}),		\
 		.power_pulse_duration_ms = 1500,						\
 		.reset_pulse_duration_ms = 100,							\
-		.startup_time_ms = 10000,							\
+		.startup_time_ms = 30000,							\
 		.shutdown_time_ms = 5000,							\
 		.init_chat_script = &_CONCAT(DT_DRV_COMPAT, _init_chat_script),			\
 		.dial_chat_script = &_CONCAT(DT_DRV_COMPAT, _dial_chat_script),			\
