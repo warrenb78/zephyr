@@ -652,7 +652,7 @@ static void modem_cellular_run_init_script_event_handler(struct modem_cellular_d
 
 	case MODEM_CELLULAR_EVENT_SCRIPT_FAILED:
 		if (modem_cellular_gpio_is_enabled(&config->power_gpio)) {
-			modem_cellular_enter_state(data, MODEM_CELLULAR_STATE_POWER_ON_PULSE);
+			modem_cellular_enter_state(data, MODEM_CELLULAR_STATE_INIT_POWER_OFF);
 			break;
 		}
 
