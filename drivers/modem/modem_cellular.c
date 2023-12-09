@@ -57,7 +57,7 @@ enum modem_cellular_event {
 	MODEM_CELLULAR_EVENT_BUS_CLOSED,
 };
 
-static bool rtc_synced = false;
+bool modem_cellular_rtc_synced = false;
 
 struct modem_cellular_data {
 	/* UART backend */
@@ -295,7 +295,7 @@ static void modem_cellular_chat_on_cclk(struct modem_chat *chat, char **argv, ui
 	const struct modem_cellular_config *config =
 		(const struct modem_cellular_config *)data->dev->config;
 
-	if (rtc_synced) {
+	if (modem_cellular_rtc_synced) {
 		return;
 	}
 
@@ -314,7 +314,7 @@ static void modem_cellular_chat_on_cclk(struct modem_chat *chat, char **argv, ui
 
     	/* Convert UNIX time to rtc_time type */
 		(void)rtc_set_time(config->rtc, &time_rtc);
-		rtc_synced = true;
+		modem_cellular_rtc_synced = true;
 	}
 }
 
