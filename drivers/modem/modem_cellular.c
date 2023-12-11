@@ -233,7 +233,6 @@ static void modem_cellular_dlci1_pipe_handler(struct modem_pipe *pipe,
 	case MODEM_PIPE_EVENT_OPENED:
 		modem_cellular_delegate_event(data, MODEM_CELLULAR_EVENT_DLCI1_OPENED);
 		break;
-	
 	default:
 		break;
 	}
