@@ -1181,7 +1181,7 @@ static int modem_cellular_pm_action(const struct device *dev, enum pm_device_act
 	struct modem_cellular_data *data = (struct modem_cellular_data *)dev->data;
 	int ret;
 
-		switch (action) {
+	switch (action) {
 	case PM_DEVICE_ACTION_RESUME:
 		modem_cellular_delegate_event(data, MODEM_CELLULAR_EVENT_RESUME);
 		ret = 0;
