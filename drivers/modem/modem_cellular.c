@@ -57,7 +57,7 @@ enum modem_cellular_event {
 	MODEM_CELLULAR_EVENT_BUS_CLOSED,
 };
 
-static bool rtc_synced = false;
+bool modem_cellular_rtc_synced;
 
 struct modem_cellular_data {
 	/* UART backend */
@@ -295,7 +295,7 @@ static void modem_cellular_chat_on_cclk(struct modem_chat *chat, char **argv, ui
 	const struct modem_cellular_config *config =
 		(const struct modem_cellular_config *)data->dev->config;
 
-	if (rtc_synced) {
+	if (modem_cellular_rtc_synced) {
 		return;
 	}
 
@@ -314,7 +314,7 @@ static void modem_cellular_chat_on_cclk(struct modem_chat *chat, char **argv, ui
 
     	/* Convert UNIX time to rtc_time type */
 		(void)rtc_set_time(config->rtc, &time_rtc);
-		rtc_synced = true;
+		modem_cellular_rtc_synced = true;
 	}
 }
 
@@ -652,7 +652,7 @@ static void modem_cellular_run_init_script_event_handler(struct modem_cellular_d
 
 	case MODEM_CELLULAR_EVENT_SCRIPT_FAILED:
 		if (modem_cellular_gpio_is_enabled(&config->power_gpio)) {
-			modem_cellular_enter_state(data, MODEM_CELLULAR_STATE_POWER_ON_PULSE);
+			modem_cellular_enter_state(data, MODEM_CELLULAR_STATE_INIT_POWER_OFF);
 			break;
 		}
 
@@ -1518,7 +1518,7 @@ MODEM_CHAT_SCRIPT_DEFINE(swir_hl7800_dial_chat_script, swir_hl7800_dial_chat_scr
 		.reset_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, mdm_reset_gpios, {}),		\
 		.power_pulse_duration_ms = 1500,						\
 		.reset_pulse_duration_ms = 100,							\
-		.startup_time_ms = 10000,							\
+		.startup_time_ms = 20000,							\
 		.shutdown_time_ms = 5000,							\
 		.init_chat_script = &_CONCAT(DT_DRV_COMPAT, _init_chat_script),			\
 		.dial_chat_script = &_CONCAT(DT_DRV_COMPAT, _dial_chat_script),			\
