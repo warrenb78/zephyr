@@ -1173,7 +1173,7 @@ static void modem_cellular_cmux_handler(struct modem_cmux *cmux, enum modem_cmux
 	}
 }
 
-#ifdef CONFIG_PM_DEVICE	
+#ifdef CONFIG_PM_DEVICE
 static int modem_cellular_pm_action(const struct device *dev, enum pm_device_action action)
 {
 	struct modem_cellular_data *data = (struct modem_cellular_data *)dev->data;
