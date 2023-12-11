@@ -504,7 +504,7 @@ static void modem_cellular_idle_event_handler(struct modem_cellular_data *data,
 static int modem_cellular_on_idle_state_leave(struct modem_cellular_data *data)
 {
 	const struct modem_cellular_config *config =
-		(const struct mo1dem_cellular_config *)data->dev->config;
+		(const struct modem_cellular_config *)data->dev->config;
 
 	k_sem_take(&data->suspended_sem, K_NO_WAIT);
 
