@@ -96,7 +96,7 @@ int pm_device_action_run(const struct device *dev,
 		atomic_clear_bit(&pm->flags, PM_DEVICE_FLAG_TURN_ON_FAILED);
 	}
 
-	return 0;
+	return ret;
 }
 
 static int power_domain_add_or_remove(const struct device *dev,

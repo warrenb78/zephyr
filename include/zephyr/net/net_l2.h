@@ -53,6 +53,7 @@ enum net_l2_flags {
  * Used to provide an interface to lower network stack.
  */
 struct net_l2 {
+	char padding[12];
 	/**
 	 * This function is used by net core to get iface's L2 layer parsing
 	 * what's relevant to itself.
