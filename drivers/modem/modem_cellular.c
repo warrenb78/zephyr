@@ -57,7 +57,7 @@ enum modem_cellular_event {
 	MODEM_CELLULAR_EVENT_BUS_CLOSED,
 };
 
-bool modem_cellular_rtc_synced = false;
+bool modem_cellular_rtc_synced;
 
 struct modem_cellular_data {
 	/* UART backend */
